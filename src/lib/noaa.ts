@@ -1,5 +1,8 @@
 import { TidePrediction, CurrentPrediction, WaterTemperature } from "./types";
-import { TIDE_STATION, CURRENT_STATION, WATER_TEMP_STATION } from "./fishing-data";
+import { TIDE_STATION, CURRENT_STATION } from "./fishing-data";
+
+// NDBC Buoy 44020 - Nantucket Sound, closest active buoy with water temp
+const NDBC_BUOY = "44020";
 import { format } from "date-fns";
 
 const BASE_URL = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
@@ -75,27 +78,29 @@ export async function fetchCurrentPredictions(
   return data.current_predictions?.cp ?? [];
 }
 
-export async function fetchWaterTemperature(
-  station: string = WATER_TEMP_STATION
-): Promise<WaterTemperature | null> {
-  const params = new URLSearchParams({
-    date: "latest",
-    station,
-    product: "water_temperature",
-    time_zone: "lst_ldt",
-    units: "english",
-    format: "json",
-  });
+export async function fetchWaterTemperature(): Promise<WaterTemperature | null> {
+  const url = `https://www.ndbc.noaa.gov/data/realtime2/${NDBC_BUOY}.txt`;
 
   try {
-    const res = await fetch(`${BASE_URL}?${params}`);
+    const res = await fetch(url);
     if (!res.ok) return null;
-    const data = await res.json();
-    const readings = data.data;
-    if (readings && readings.length > 0) {
-      return readings[readings.length - 1];
-    }
-    return null;
+    const text = await res.text();
+    const lines = text.split("\n").filter((l) => !l.startsWith("#") && l.trim());
+    if (lines.length === 0) return null;
+
+    // Columns: YY MM DD hh mm WDIR WSPD GST WVHT DPD APD MWD PRES ATMP WTMP DEWP VIS PTDY TIDE
+    // WTMP is index 14 (0-based), in Celsius
+    const cols = lines[0].trim().split(/\s+/);
+    const wtmpC = cols[14];
+    if (!wtmpC || wtmpC === "MM") return null;
+
+    const tempC = parseFloat(wtmpC);
+    const tempF = tempC * 9 / 5 + 32;
+
+    return {
+      t: `${cols[0]}-${cols[1]}-${cols[2]} ${cols[3]}:${cols[4]}`,
+      v: tempF.toFixed(1),
+    };
   } catch {
     return null;
   }

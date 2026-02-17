@@ -7,7 +7,7 @@ export const CHATHAM_LON = -69.9597;
 // NOAA Station IDs
 export const TIDE_STATION = "8447435"; // Chatham (Lydia Cove)
 export const CURRENT_STATION = "ACT1646"; // Monomoy Point area
-export const WATER_TEMP_STATION = "8447435";
+// Water temp now sourced from NDBC Buoy 44020 (Nantucket Sound) in noaa.ts
 
 // Default boat cruising speed in knots
 export const DEFAULT_CRUISE_SPEED_KTS = 25;

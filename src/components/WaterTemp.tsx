@@ -58,6 +58,7 @@ export default function WaterTemp({ temp, mode }: WaterTempProps) {
           Ideal: {TUNA_IDEAL_TEMP_MIN}–{TUNA_IDEAL_TEMP_MAX}°F
         </div>
       )}
+      <div className="text-xs text-gray-600 mt-1">Buoy 44020 · Nantucket Sound</div>
     </div>
   );
 }
